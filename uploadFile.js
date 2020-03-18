@@ -2,7 +2,7 @@
 var participants={
 	noOfParticipants:0
 };
-
+var empezar = 0;
 var messages={
 	totalMessages:0,
 	totalMedia:0,
@@ -66,7 +66,8 @@ var group={
 	creator:"",
 	name:"",
 	dateCreated:"",
-	left:0
+	left:0,
+	removed:0
 }
 
 
@@ -131,7 +132,6 @@ function processFile(e)
 {
 	var file = e.target.result;
 	var fileSplit = file.split("\n") // split based on new line
-	//console.log(fileSplit.length);
 	
 	for(var i=0;i<fileSplit.length;i++)
 	{
@@ -163,16 +163,18 @@ function processLine(line)
 	var message = null;
 	var date = null;
 	var start=0;
-	
+
 	// regular expression to test on each line
 	// first bracket matches DATE
 	// second bracket matches TIME
 	// third bracket SENDER
 	// fourth bracket MESSAGE
-	var lineRE = /(^\d+\/\d+\/\d+), (\d+:\d{2}\s\D{2}) \- (.*?): (.*)/ 
-	
+	//var lineRE = /(^\d+\/\d+\/\d+) (\d+:\d{2}\s\D{2}) \- (.*?): (.*)/ 
+	//var lineRE = /(^\d+\/\d+\/\d+) (.*)/ 
+	var lineRE = /(^\d+\/\d+\/\d+) (\d+:\d+) \- (.*?): (.*)/ 
 	var testLine = lineRE.exec(line);
-	
+
+		
 	if(testLine!==null)
 	{
 		date= testLine[1];
@@ -231,6 +233,10 @@ function processLine(line)
 		
 		else if(lastSender!==null && join===null) // get lines that don't begin with a sender
 		{
+			if(!group.isGroup && participants.noOfParticipants>2){
+				group.isGroup = true;
+			}
+
 			processMessage(line,lastSender);
 		}
 		
@@ -276,13 +282,23 @@ function processMessage(message,sender)
 {
 	
 	message = message.trim();
-	
+	if(message.includes("eliminó a ")){
+		console.log(message);
+		console.log("checkRemove(message)",checkRemove(message));
+		console.log("group.isGroup",group.isGroup)
+	}
 	// check if message indicates someone leaving the group
 	if(group.isGroup && checkLeft(message)) // count number of people that left
 	{
 		group.left++;
+		console.log("SE FUE");
 	}
-	
+	// check if message indicates someone is romving from the group
+	else if(group.isGroup && checkRemove(message))
+	{
+		group.removed++;
+		console.log("eliminado");
+	}
 	// check if the message is just a change of numbe rmessage
 	else if(group.isGroup && changedNumber(message)!==false)
 	{
@@ -298,7 +314,7 @@ function processMessage(message,sender)
 	}
 	
 	// check if the message is just media
-	else if(message === "<Media omitted>")
+	else if(message === "<Multimedia omitido>")
 	{
 		messages.totalMedia++;
 	}
@@ -359,14 +375,21 @@ function processMessage(message,sender)
 
 function checkLeft(message)
 {
-	
+	let x = 0;
+	if(message.includes("eliminó a ")){
+		x=1;
+	}
 	var left = null;
 	
-	var leftRE = /(^\d+\/\d+\/\d+), (\d+:\d{2}\s\D{2}) \- (.*) left$/ ;
+	var leftRE = /(^\d+\/\d+\/\d+) (\d+:\d+) \- (.*) left$/ ;
 	
 	left = leftRE.exec(message);
 	
-	
+	if(x == 1){
+		console.log("left",left);
+		console.log(message);
+		x = 0;
+	}
 	if(left===null)
 	{
 		return false;
@@ -378,6 +401,33 @@ function checkLeft(message)
 	}
 }
 
+function checkRemove(message)
+{
+	let x = 0;
+	if(message.includes("eliminó a ")){
+		x=1;
+	}
+	var remove = null;
+	
+	var removeRE = /(^\d+\/\d+\/\d+) (\d+:\d+) \- (.*) eliminó (.*)/ ;
+	
+	remove = removeRE.exec(message);
+	if(x == 1){
+		console.log("remove",remove);
+		console.log(message);
+		x = 0;
+	}
+
+	if(remove===null)
+	{
+		return false;
+	}
+	
+	else
+	{
+		return true;
+	}
+}
 function changedNumber(message)
 {
 	var changed = null;
@@ -436,8 +486,8 @@ function processTime(time,date)
 {
 	// split time by ':' delimiter
 	var timeSplit = time.split(":"); // get numbers
-	var timeOfDay = time.split(" "); // get am or pm
-	var AMPM = timeOfDay[1].toUpperCase();
+	//var timeOfDay = time.split(" "); // get am or pm
+	//var AMPM = timeOfDay[1].toUpperCase();
 	
 	// split date by '/' delimiters
 	var dateSplit = checkDate(date);
@@ -446,6 +496,12 @@ function processTime(time,date)
 	
 	var day = getDay(dateSplit); // get day of the week
 	
+	if(empezar < 10){
+		empezar++;
+		console.log("dateSplit",dateSplit);
+		console.log("monthYear",monthYear);
+		console.log("day",day);
+	}
 	// increase no of messages sent on a particular date
 	if(dateData.dates.hasOwnProperty(date)===false)
 	{
@@ -458,14 +514,14 @@ function processTime(time,date)
 	}
 	
 	// increase no of messages  sent at a particular time
-	if(dateData.time.hasOwnProperty(timeSplit[0]+" "+AMPM)===false)
+	if(dateData.time.hasOwnProperty(timeSplit[0])===false)
 	{
-		dateData.time[timeSplit[0]+" "+AMPM]=1; //hh am/pm
+		dateData.time[timeSplit[0]]=1; //hh am/pm
 	}
 	
 	else
 	{
-		dateData.time[timeSplit[0]+" "+AMPM]++;
+		dateData.time[timeSplit[0]]++;
 	}
 	
 	// increase no of messages sent in a particular month
@@ -591,6 +647,7 @@ function getDay(date)
 
 function dateDiff(prev, curr)
 {
+
 	var newPrev= checkDate(prev);
 	var newCurr = checkDate(curr);
 	
@@ -607,7 +664,8 @@ function checkDate(passedDate)
 	var splitDate;
 	var date,month,year
 
-	var date1 = /\d+\/\d+\/\d{4}/;
+	//var date1 = /\d+\/\d+\/\d{4}/;
+	var date1 = /\d+\/\d+\/\d{2}/;
 	var date2 = /\d+\/\d+\/\d{2}/;
 	
 	// check MM/DD/YYYY
@@ -627,7 +685,9 @@ function checkDate(passedDate)
 		month = parseInt(splitDate[0]);
 		year= parseInt(splitDate[2]);
 	}
-	
+	if(empezar<10){
+
+	}
 	return([date,month,year]);
 }
 
@@ -694,7 +754,6 @@ function finalProcessing()
 		
 		currentStreak=0;
 	}
-	
 	// get length of conversation
 	dateData.conversationLength =dateDiff(dateData.startDate,dateData.endDate);
 	
@@ -746,6 +805,7 @@ function alterDisplay()
 		printEmojiAnalysis();
 		//printWordsAnalysis()
 		googleApi();
+		console.log(group);
 	}
 }
 
@@ -795,6 +855,10 @@ function printOverview()
 		// users that left
 		$("#exits").removeClass("hide");
 		$("#noOfExits").html(group.left);
+
+		// users that left
+		$("#deletions").removeClass("hide");
+		$("#noOfDeletions").html(group.removed);
 	}
 }
 
@@ -956,30 +1020,30 @@ function drawBarChartTime()
     data.addColumn('number', 'NO OF MESSAGES');
 	data.addColumn({type: 'string', role: 'style'});
 	
-	data.addRow(["12 AM", dateData.time["12 AM"], 'black']);
-	data.addRow(["1 AM", dateData.time["1 AM"], 'black']);
-	data.addRow(["2 AM", dateData.time["2 AM"], 'black']);
-	data.addRow(["3 AM", dateData.time["3 AM"], 'black']);
-	data.addRow(["4 AM", dateData.time["4 AM"], 'black']);
-	data.addRow(["5 AM", dateData.time["5 AM"], 'black']);
-	data.addRow(["6 AM", dateData.time["6 AM"], 'black']);
-	data.addRow(["7 AM", dateData.time["7 AM"], 'black']);
-	data.addRow(["8 AM", dateData.time["8 AM"], 'black']);
-	data.addRow(["9 AM", dateData.time["9 AM"], 'black']);
-	data.addRow(["10 AM", dateData.time["10 AM"], 'black']);
-	data.addRow(["11 AM", dateData.time["11 AM"], 'black']);
-	data.addRow(["12 PM", dateData.time["12 PM"], 'black']);
-	data.addRow(["1 PM", dateData.time["1 PM"], 'black']);
-	data.addRow(["2 PM", dateData.time["2 PM"], 'black']);
-	data.addRow(["3 PM", dateData.time["3 PM"], 'black']);
-	data.addRow(["4 PM", dateData.time["4 PM"], 'black']);
-	data.addRow(["5 PM", dateData.time["5 PM"], 'black']);
-	data.addRow(["6 PM", dateData.time["6 PM"], 'black']);
-	data.addRow(["7 PM", dateData.time["7 PM"], 'black']);
-	data.addRow(["8 PM", dateData.time["8 PM"], 'black']);
-	data.addRow(["9 PM", dateData.time["9 PM"], 'black']);
-	data.addRow(["10 PM", dateData.time["10 PM"], 'black']);
-	data.addRow(["11 PM", dateData.time["11 PM"], 'black']);
+	data.addRow(["12 AM", dateData.time["0"], 'black']);
+	data.addRow(["1 AM", dateData.time["1"], 'black']);
+	data.addRow(["2 AM", dateData.time["2"], 'black']);
+	data.addRow(["3 AM", dateData.time["3"], 'black']);
+	data.addRow(["4 AM", dateData.time["4"], 'black']);
+	data.addRow(["5 AM", dateData.time["5"], 'black']);
+	data.addRow(["6 AM", dateData.time["6"], 'black']);
+	data.addRow(["7 AM", dateData.time["7"], 'black']);
+	data.addRow(["8 AM", dateData.time["8"], 'black']);
+	data.addRow(["9 AM", dateData.time["9"], 'black']);
+	data.addRow(["10 AM", dateData.time["10"], 'black']);
+	data.addRow(["11 AM", dateData.time["11"], 'black']);
+	data.addRow(["12 PM", dateData.time["12"], 'black']);
+	data.addRow(["1 PM", dateData.time["1"], 'black']);
+	data.addRow(["2 PM", dateData.time["2"], 'black']);
+	data.addRow(["3 PM", dateData.time["3"], 'black']);
+	data.addRow(["4 PM", dateData.time["4"], 'black']);
+	data.addRow(["5 PM", dateData.time["5"], 'black']);
+	data.addRow(["6 PM", dateData.time["6"], 'black']);
+	data.addRow(["7 PM", dateData.time["7"], 'black']);
+	data.addRow(["8 PM", dateData.time["8"], 'black']);
+	data.addRow(["9 PM", dateData.time["9"], 'black']);
+	data.addRow(["10 PM", dateData.time["10"], 'black']);
+	data.addRow(["11 PM", dateData.time["11"], 'black']);
 	 
 	var options = {
 		height:400,
