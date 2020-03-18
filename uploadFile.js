@@ -282,22 +282,15 @@ function processMessage(message,sender)
 {
 	
 	message = message.trim();
-	if(message.includes("eliminó a ")){
-		console.log(message);
-		console.log("checkRemove(message)",checkRemove(message));
-		console.log("group.isGroup",group.isGroup)
-	}
 	// check if message indicates someone leaving the group
 	if(group.isGroup && checkLeft(message)) // count number of people that left
 	{
 		group.left++;
-		console.log("SE FUE");
 	}
 	// check if message indicates someone is romving from the group
 	else if(group.isGroup && checkRemove(message))
 	{
 		group.removed++;
-		console.log("eliminado");
 	}
 	// check if the message is just a change of numbe rmessage
 	else if(group.isGroup && changedNumber(message)!==false)
@@ -375,21 +368,14 @@ function processMessage(message,sender)
 
 function checkLeft(message)
 {
-	let x = 0;
-	if(message.includes("eliminó a ")){
-		x=1;
-	}
+
 	var left = null;
 	
 	var leftRE = /(^\d+\/\d+\/\d+) (\d+:\d+) \- (.*) left$/ ;
 	
 	left = leftRE.exec(message);
 	
-	if(x == 1){
-		console.log("left",left);
-		console.log(message);
-		x = 0;
-	}
+
 	if(left===null)
 	{
 		return false;
@@ -412,11 +398,7 @@ function checkRemove(message)
 	var removeRE = /(^\d+\/\d+\/\d+) (\d+:\d+) \- (.*) eliminó (.*)/ ;
 	
 	remove = removeRE.exec(message);
-	if(x == 1){
-		console.log("remove",remove);
-		console.log(message);
-		x = 0;
-	}
+
 
 	if(remove===null)
 	{
@@ -496,12 +478,7 @@ function processTime(time,date)
 	
 	var day = getDay(dateSplit); // get day of the week
 	
-	if(empezar < 10){
-		empezar++;
-		console.log("dateSplit",dateSplit);
-		console.log("monthYear",monthYear);
-		console.log("day",day);
-	}
+
 	// increase no of messages sent on a particular date
 	if(dateData.dates.hasOwnProperty(date)===false)
 	{
@@ -805,7 +782,7 @@ function alterDisplay()
 		printEmojiAnalysis();
 		//printWordsAnalysis()
 		googleApi();
-		console.log(group);
+
 	}
 }
 
