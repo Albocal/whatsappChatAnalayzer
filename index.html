@@ -2,7 +2,7 @@
 <html>
 	<head>
 		<title>ANALYZER</title>
-		<meta charset="utf-8">
+		<meta charset="UTF-8">
 		<!--css-->
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
@@ -202,20 +202,49 @@
 						
 						
 						<div clss="row largeSubSegment">
-							<div class="col-md-1"></div>
-							<div class="col-md-10 chart" id="calendarChart"></div>
-							<div class="col-md-1"></div>
+							<div class="col-md-4 wordsDiv" >
+								<h4 class="string top" >SUMMARY </h4>
+								<h5 class="string base"  id="time2"></h5>
+							</div>
+							<div class="col-md-8 chart" id="calendarChart"></div>
 						</div>
 						
 					</div>
-					<!--end time date analysis-->
 					<hr>
-					
-					<!--emoji analysis-->
-					<div class="row segment" id="emojiAnalysis">
-						<h2 class="string segmentHead">EMOJI ANALYSIS</h2>
+					<!--
+					<div class="row segment" id="wordsAnalysis">
+						<h2 class="string segmentHead">WORDS & EMOJI ANALYSIS</h2>
 						
-						<!-- total emoji/ chart-->
+
+						<div class="row largeSubSegment">
+							<div class="col-md-2"> </div>
+							<div class="col-md-4 wordsDiv" >
+								<h4 class="string top" id="mostwords">MOST WORDS: </h4>
+								<h5 class="string base" id="mostWordsName">  </h5>
+							</div>
+							<div class="col-md-6 chart" id="wordsChart">
+							</div>
+						</div>
+					</div>
+					-->
+					<div class="row segment" id="emojiAnalysis">
+						<h2 class="string segmentHead">EMOJI /  ANALYSIS</h2>
+						<!--
+						<div class="row largeSubSegment">
+							<div class="col-md-2"> </div>
+							<div class="col-md-4 wordsDiv" >
+								<h4 class="string top" id="mostEmojis">MOST EMOJIS: </h4>
+								<h5 class="string base" id="mostEmojisName">  </h5>
+							</div>
+							<div id="AAAA">
+							<div class="col-md-6 chart" id="emojiChart">
+							</div>
+							</div>
+
+						</div>
+						-->
+
+						<!-- emoji/ chart template-->
 						<div class="row largeSubSegment">
 							<div class="col-md-2"> </div>
 							<div class="col-md-4 wordsDiv" >

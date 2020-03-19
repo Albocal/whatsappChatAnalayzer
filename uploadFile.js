@@ -2,7 +2,8 @@
 var participants={
 	noOfParticipants:0
 };
-var empezar = 0;
+
+
 var messages={
 	totalMessages:0,
 	totalMedia:0,
@@ -14,7 +15,10 @@ var messages={
 var words={
 	totalWords:0,
 	longestWord:"",
-	listOfWords:{}
+	listOfWords:{},
+	uniqueWordsperParticipant:{
+
+	} 
 };
 
 var emojis={
@@ -283,7 +287,7 @@ function processMessage(message,sender)
 	
 	message = message.trim();
 	// check if message indicates someone leaving the group
-	if(group.isGroup && checkLeft(message)) // count number of people that left
+	if(group.isGroup  && checkLeft(message)) // count number of people that left
 	{
 		group.left++;
 	}
@@ -327,6 +331,7 @@ function processMessage(message,sender)
 			var word = strArray[i].toLowerCase();
 			if(word.length>0)
 			{
+				if(participants[sender])
 				// calculate word count for each participant
 				if(participants[sender].hasOwnProperty("wordCount")===false)
 				{
@@ -342,11 +347,18 @@ function processMessage(message,sender)
 				if(words.listOfWords.hasOwnProperty(word)===false && word.length>=3) // if word not in dictionary and is greater than three
 				{
 					words.listOfWords[word]=1;
+					words.uniqueWordsperParticipant[word] = {};
+					words.uniqueWordsperParticipant[word][sender] = 1;
 				}
 				
 				else if (words.listOfWords.hasOwnProperty(word) && word.length>=3) // increase the word count for specific word
 				{
 					words.listOfWords[word]++;
+					if(words.uniqueWordsperParticipant[word].hasOwnProperty(sender)){
+						words.uniqueWordsperParticipant[word][sender]++;
+					}else{
+						words.uniqueWordsperParticipant[word][sender]=1;
+					}
 				}
 			}
 			
@@ -444,11 +456,20 @@ function processEmojis(message,sender)
 		if(participants[sender].hasOwnProperty("emojiCount")===false)
 		{
 			participants[sender].emojiCount = 1;
+
+			participants[sender][emoji] = 1;
 		}
 		
 		else
 		{
 			participants[sender].emojiCount++;
+
+			if(participants[sender].hasOwnProperty(emoji)){
+				participants[sender][emoji]++;
+			}else{
+				participants[sender][emoji] = 1;
+			}
+			
 		}
 		
 		if(emojis.listOfEmojis.hasOwnProperty(emoji)===false)
@@ -662,9 +683,7 @@ function checkDate(passedDate)
 		month = parseInt(splitDate[0]);
 		year= parseInt(splitDate[2]);
 	}
-	if(empezar<10){
 
-	}
 	return([date,month,year]);
 }
 
@@ -789,6 +808,7 @@ function alterDisplay()
 function printDuration()
 {
 	$("#time").html(dateData.startDate+" - "+dateData.endDate);
+	$("#time2").html(dateData.startDate+" - "+dateData.endDate);
 }
 
 function printOverview()
@@ -1010,17 +1030,17 @@ function drawBarChartTime()
 	data.addRow(["10 AM", dateData.time["10"], 'black']);
 	data.addRow(["11 AM", dateData.time["11"], 'black']);
 	data.addRow(["12 PM", dateData.time["12"], 'black']);
-	data.addRow(["1 PM", dateData.time["1"], 'black']);
-	data.addRow(["2 PM", dateData.time["2"], 'black']);
-	data.addRow(["3 PM", dateData.time["3"], 'black']);
-	data.addRow(["4 PM", dateData.time["4"], 'black']);
-	data.addRow(["5 PM", dateData.time["5"], 'black']);
-	data.addRow(["6 PM", dateData.time["6"], 'black']);
-	data.addRow(["7 PM", dateData.time["7"], 'black']);
-	data.addRow(["8 PM", dateData.time["8"], 'black']);
-	data.addRow(["9 PM", dateData.time["9"], 'black']);
-	data.addRow(["10 PM", dateData.time["10"], 'black']);
-	data.addRow(["11 PM", dateData.time["11"], 'black']);
+	data.addRow(["1 PM", dateData.time["13"], 'black']);
+	data.addRow(["2 PM", dateData.time["14"], 'black']);
+	data.addRow(["3 PM", dateData.time["15"], 'black']);
+	data.addRow(["4 PM", dateData.time["16"], 'black']);
+	data.addRow(["5 PM", dateData.time["17"], 'black']);
+	data.addRow(["6 PM", dateData.time["18"], 'black']);
+	data.addRow(["7 PM", dateData.time["19"], 'black']);
+	data.addRow(["8 PM", dateData.time["20"], 'black']);
+	data.addRow(["9 PM", dateData.time["21"], 'black']);
+	data.addRow(["10 PM", dateData.time["22"], 'black']);
+	data.addRow(["11 PM", dateData.time["23"], 'black']);
 	 
 	var options = {
 		height:400,
@@ -1090,12 +1110,38 @@ function drawBarChartMonths()
     chart.draw(data,options);
 }
 
+function drawBarChartWords()
+{
+	var data = new google.visualization.DataTable();
+	
+	// add table info
+	data.addColumn('string', 'Month');
+    data.addColumn('number', 'NO OF MESSAGES');
+	data.addColumn({type: 'string', role: 'style'});
+	
+	for(var month in dateData.months)
+	{
+		data.addRow([month,dateData.months[month],'black']);
+	}
+	
+	var options = {
+		height:400,
+		width:750,
+		bar: {groupWidth: "50%"},
+		legend: { position: "none" },
+		fontName:'Orbitron'
+    };
+	
+	var chart = new google.visualization.ColumnChart(document.getElementById("wordsChart"));
+    chart.draw(data,options);
+}
 function drawCalendarChart()
 {
 	var data = new google.visualization.DataTable();
 	data.addColumn('date', 'Date');
     data.addColumn('number', 'NO OF MESSAGES');
-	
+	let years=[];
+
 	for (var date in dateData.dates)
 	{
 		var splitDate = checkDate(date);
@@ -1104,13 +1150,17 @@ function drawCalendarChart()
 		var year = splitDate[2]+"";
 		
 		
-		var newYear = (year.length<4)?("20"+year):year;
 		
+		var newYear = (year.length<4)?("20"+year):year;
+		if(years.includes(newYear)===false){
+			years.push(newYear);
+		}
+
 		data.addRow([new Date(newYear,parseInt(month)-1,parseInt(day)),dateData.dates[date]]);
 	}
-	
+
 	var options = {
-		height:450,
+		height:150*years.length,
 		legend: { position: "none" },
 		fontName:'Orbitron',
 		calendar: {
@@ -1159,7 +1209,7 @@ function drawEmojiChart()
 			fontSize:15
 		}
 	};
-
+	$("#AAAA").html("<div class=\"col-md-6 chart\" id=\"emojiChart\"></div>");
 	var chart = new google.visualization.PieChart(document.getElementById('emojiChart'));
 	chart.draw(data, options);
 }
